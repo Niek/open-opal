@@ -349,9 +349,11 @@ final class CameraSettings {
 
     func reset() {
         autoExposure = true; evCompensation = 0; aeLock = false
+        meterOnSubject = false
         exposureUs = 8_000; iso = 400
         manualFocus = false; afMode = .continuousVideo; lensPosition = 120
         manualWhiteBalance = false; awbMode = .auto; whiteBalanceK = 5600; awbLock = false
+        antiBanding = .hz60
         sharpness = 1; lumaDenoise = 1; chromaDenoise = 1
         brightness = 0; contrast = 0; saturation = 0
     }

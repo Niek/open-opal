@@ -35,9 +35,11 @@ struct CameraSettingsPersistenceTests {
         precondition(!restored.mirrorPreview && restored.showAdvanced && !restored.coldDirty)
 
         restored.reset()
+        precondition(!restored.meterOnSubject && restored.antiBanding == .hz60)
         let reset = CameraSettings(preferences: preferences)
         precondition(!reset.manualFocus && reset.lensPosition == 120 && reset.brightness == 0)
         precondition(reset.autoExposure && reset.exposureUs == 8000)
+        precondition(!reset.meterOnSubject && reset.antiBanding == .hz60)
 
         func restore(_ json: String) -> CameraSettings {
             preferences.set(Data(json.utf8), forKey: CameraSettings.persistenceKey)
