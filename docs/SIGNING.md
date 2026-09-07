@@ -42,13 +42,19 @@ The checked-in signing settings use upstream defaults. Before releasing a fork:
 
 - Update the team ID, bundle IDs, extension product name, App Group and
   `CMIOExtensionMachServiceName` in `project.yml`. Keep the extension's bundle ID
-  equal to the app's bundle ID plus `.camera`.
+  equal to the app's bundle ID plus `.camera`, and the launcher's bundle ID equal
+  to the app's bundle ID plus `.launcher`.
 - Keep both targets' `.entitlements` files consistent with those settings and
   your provisioning profiles, including application identifiers, team identifier
   and App Group. XcodeGen generates these files from `project.yml`.
 - In `scripts/sign.sh`, update the hardcoded `EXT` path to your extension's
   `<bundle-id>.systemextension` name. Set the `IDENTITY` environment variable to
   your Developer ID Application signing identity, or update its default there.
+
+The optional auto-start helper is built into
+`Contents/Library/LoginItems/OpenOpalLauncher.app` and signed before the host.
+It needs no restricted entitlements or separate provisioning profile. It is
+registered with `SMAppService` only when the user enables automatic startup.
 
 Then run:
 
