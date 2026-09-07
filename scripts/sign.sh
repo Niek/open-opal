@@ -7,6 +7,7 @@ set -euo pipefail
 APP="${1:?usage: sign.sh /path/to/OpenOpal.app}"
 IDENTITY="${IDENTITY:-Developer ID Application: Alistair Smith (RD994J874S)}"
 EXT="$APP/Contents/Library/SystemExtensions/sh.alistair.open-opal.camera.systemextension"
+HELPER="$APP/Contents/Library/LoginItems/OpenOpalLauncher.app"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 echo "==> embedding provisioning profiles"
@@ -25,6 +26,9 @@ echo "==> camera extension"
 codesign --force --timestamp --options runtime \
   --entitlements "$ROOT/Sources/OpenOpalCameraExtension/OpenOpalCameraExtension.entitlements" \
   --sign "$IDENTITY" "$EXT"
+
+echo "==> login helper"
+codesign --force --timestamp --options runtime --sign "$IDENTITY" "$HELPER"
 
 echo "==> app"
 codesign --force --timestamp --options runtime \
