@@ -41,6 +41,40 @@ struct CameraSettingsPersistenceTests {
         precondition(reset.autoExposure && reset.exposureUs == 8000)
         precondition(!reset.meterOnSubject && reset.antiBanding == .hz60)
 
+        // Blur-only changes must save immediately, without another camera
+        // control change accidentally triggering the write for them.
+        let blur = CameraSettings(preferences: preferences)
+        blur.bokehEnabled = true
+        precondition(CameraSettings(preferences: preferences).bokehEnabled)
+        blur.blurAmount = 0.4
+        precondition(abs(CameraSettings(preferences: preferences).blurAmount - 0.4) < 0.000001)
+        blur.syncBokeh = false
+        precondition(!CameraSettings(preferences: preferences).syncBokeh)
+        blur.uniformBlur = false
+        precondition(!CameraSettings(preferences: preferences).uniformBlur)
+        blur.matteQuality = .fast
+        precondition(CameraSettings(preferences: preferences).matteQuality == .fast)
+        blur.focusDistance = 0.7
+        precondition(CameraSettings(preferences: preferences).focusDistance == 0.7)
+        blur.autoFocusSubject = false
+        precondition(!CameraSettings(preferences: preferences).autoFocusSubject)
+        blur.apertureShape = .hexagonal
+        precondition(CameraSettings(preferences: preferences).apertureShape == .hexagonal)
+        blur.highlightBloom = 0.2
+        let restoredBlur = CameraSettings(preferences: preferences)
+        precondition(restoredBlur.highlightBloom == 0.2 && restoredBlur.bokehEnabled)
+        precondition(abs(restoredBlur.blurAmount - 0.4) < 0.000001)
+        precondition(!restoredBlur.syncBokeh && !restoredBlur.uniformBlur && restoredBlur.matteQuality == .fast)
+        precondition(restoredBlur.focusDistance == 0.7 && !restoredBlur.autoFocusSubject)
+        precondition(restoredBlur.apertureShape == .hexagonal && !restoredBlur.coldDirty)
+
+        restoredBlur.resetBokeh()
+        let resetBlur = CameraSettings(preferences: preferences)
+        precondition(abs(resetBlur.blurAmount - 0.7) < 0.000001)
+        precondition(resetBlur.uniformBlur && resetBlur.syncBokeh && resetBlur.matteQuality == .accurate)
+        resetBlur.bokehEnabled = false
+        precondition(!CameraSettings(preferences: preferences).bokehEnabled)
+
         func restore(_ json: String) -> CameraSettings {
             preferences.set(Data(json.utf8), forKey: CameraSettings.persistenceKey)
             return CameraSettings(preferences: preferences)
@@ -48,9 +82,16 @@ struct CameraSettingsPersistenceTests {
         let partial = restore(#"{"version":1,"brightness":4}"#)
         precondition(partial.brightness == 4 && partial.lensPosition == 120)
         precondition(!partial.meterOnSubject)
+        precondition(!partial.bokehEnabled && partial.aperture == 2.8)
+        precondition(partial.syncBokeh && partial.uniformBlur && partial.matteQuality == .accurate)
+        precondition(partial.focusDistance == 0.35 && partial.autoFocusSubject)
+        precondition(partial.apertureShape == .circular && partial.highlightBloom == 0.55)
         let invalid = restore(#"{"version":1,"brightness":999,"lensPosition":-1,"fps":0,"iso":99999,"exposureUs":-1,"contrast":2}"#)
         precondition(invalid.brightness == 0 && invalid.lensPosition == 120 && invalid.fps == 30)
         precondition(invalid.iso == 400 && invalid.exposureUs == 8000 && invalid.contrast == 2)
+        let invalidBlur = restore(#"{"version":1,"bokehEnabled":true,"aperture":999,"focusDistance":-1,"highlightBloom":2,"brightness":4}"#)
+        precondition(invalidBlur.bokehEnabled && invalidBlur.brightness == 4)
+        precondition(invalidBlur.aperture == 2.8 && invalidBlur.focusDistance == 0.35 && invalidBlur.highlightBloom == 0.55)
         for json in ["not JSON", #"{"version":1,"lensPosition":"wrong type"}"#,
                      #"{"version":1,"afMode":"unknown"}"#,
                      #"{"version":2,"brightness":4}"#] {

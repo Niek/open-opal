@@ -161,7 +161,7 @@ final class CameraSettings {
     /// the person who actually wants to argue with the ISP.
     var showAdvanced = false { didSet { save() } }
 
-    var bokehEnabled = false
+    var bokehEnabled = false { didSet { save() } }
 
     /// The one bokeh control a normal person should ever touch: 0 = off, 1 = as
     /// much blur as we can give you. Mapped onto a real f-number underneath,
@@ -184,7 +184,7 @@ final class CameraSettings {
     /// Waiting costs latency (and some frame rate), and buys exact alignment.
     /// It's the right trade for a video call, where 80ms of latency is invisible
     /// but a blur lagging behind your head is not.
-    var syncBokeh = true
+    var syncBokeh = true { didSet { save() } }
 
     /// Blur everything behind the subject by the same amount, ignoring depth.
     ///
@@ -197,14 +197,14 @@ final class CameraSettings {
     /// synchronous mode is latency you feel. All of that budget goes into a better
     /// mask instead, which is where the visible quality actually lives. This is
     /// essentially what Google Meet does, and it's why Meet looks clean.
-    var uniformBlur = true
+    var uniformBlur = true { didSet { save() } }
 
     /// How much compute to spend on the mask. With depth gone, we can afford the
     /// good one — and the mask is now the only thing standing between us and a
     /// clean edge, so it's worth every millisecond.
-    var matteQuality: MatteQuality = .accurate
+    var matteQuality: MatteQuality = .accurate { didSet { save() } }
 
-    enum MatteQuality: String, CaseIterable, Identifiable {
+    enum MatteQuality: String, Codable, CaseIterable, Identifiable {
         case fast     = "Fast"
         case balanced = "Balanced"
         case accurate = "Accurate"
@@ -219,16 +219,16 @@ final class CameraSettings {
         }
     }
     /// Real lens math: smaller f-number = shallower depth of field.
-    var aperture: Double = 2.8        // f/1.4 .. f/16
+    var aperture: Double = 2.8 { didSet { save() } } // f/1.4 .. f/16
     /// Where the focal plane sits, as normalized scene depth (0 = near, 1 = far).
-    var focusDistance: Double = 0.35
+    var focusDistance: Double = 0.35 { didSet { save() } }
     /// Follow the subject automatically instead of a fixed focal plane.
-    var autoFocusSubject = true
-    var apertureShape: ApertureShape = .circular
+    var autoFocusSubject = true { didSet { save() } }
+    var apertureShape: ApertureShape = .circular { didSet { save() } }
     /// Bloom on specular highlights — what makes bokeh read as glass, not blur.
-    var highlightBloom: Double = 0.55
+    var highlightBloom: Double = 0.55 { didSet { save() } }
 
-    enum ApertureShape: String, CaseIterable, Identifiable {
+    enum ApertureShape: String, Codable, CaseIterable, Identifiable {
         case circular  = "Circular"
         case hexagonal = "Hexagonal"
         var id: String { rawValue }
@@ -272,6 +272,15 @@ final class CameraSettings {
         if let value = saved.contrast, (-10...10).contains(value) { contrast = value }
         if let value = saved.saturation, (-10...10).contains(value) { saturation = value }
         if let value = saved.showAdvanced { showAdvanced = value }
+        if let value = saved.bokehEnabled { bokehEnabled = value }
+        if let value = saved.syncBokeh { syncBokeh = value }
+        if let value = saved.uniformBlur { uniformBlur = value }
+        if let value = saved.matteQuality { matteQuality = value }
+        if let value = saved.aperture, (1.4...16).contains(value) { aperture = value }
+        if let value = saved.focusDistance, (0...1).contains(value) { focusDistance = value }
+        if let value = saved.autoFocusSubject { autoFocusSubject = value }
+        if let value = saved.apertureShape { apertureShape = value }
+        if let value = saved.highlightBloom, (0...1).contains(value) { highlightBloom = value }
     }
 
     private func save() {
@@ -301,7 +310,16 @@ final class CameraSettings {
             brightness: brightness,
             contrast: contrast,
             saturation: saturation,
-            showAdvanced: showAdvanced
+            showAdvanced: showAdvanced,
+            bokehEnabled: bokehEnabled,
+            syncBokeh: syncBokeh,
+            uniformBlur: uniformBlur,
+            matteQuality: matteQuality,
+            aperture: aperture,
+            focusDistance: focusDistance,
+            autoFocusSubject: autoFocusSubject,
+            apertureShape: apertureShape,
+            highlightBloom: highlightBloom
         )
         if let data = try? JSONEncoder().encode(saved) {
             preferences.set(data, forKey: Self.persistenceKey)
@@ -336,6 +354,15 @@ final class CameraSettings {
         var contrast: Int?
         var saturation: Int?
         var showAdvanced: Bool?
+        var bokehEnabled: Bool?
+        var syncBokeh: Bool?
+        var uniformBlur: Bool?
+        var matteQuality: MatteQuality?
+        var aperture: Double?
+        var focusDistance: Double?
+        var autoFocusSubject: Bool?
+        var apertureShape: ApertureShape?
+        var highlightBloom: Double?
     }
 
     // MARK: - Presets
