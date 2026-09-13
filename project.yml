@@ -112,6 +112,7 @@ targets:
       - name: Build OpalBridge (depthai)
         script: |
           set -e
+          export PATH="/opt/homebrew/bin:$PATH"
           if [ ! -f "$SRCROOT/vendor/install/lib/libdepthai-core.dylib" ]; then
             echo "error: depthai-core not built. Run ./scripts/bootstrap.sh first."
             exit 1

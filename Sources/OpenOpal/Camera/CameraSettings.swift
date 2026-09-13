@@ -1,5 +1,8 @@
 import Foundation
 import Observation
+import os
+
+private let log = Logger(subsystem: "com.openopal", category: "settings")
 
 /// Everything the C1's ISP can be told to do, in one observable model.
 ///
@@ -321,8 +324,18 @@ final class CameraSettings {
             apertureShape: apertureShape,
             highlightBloom: highlightBloom
         )
-        if let data = try? JSONEncoder().encode(saved) {
+        do {
+            let data = try JSONEncoder().encode(saved)
             preferences.set(data, forKey: Self.persistenceKey)
+            log.debug("saved controls (ev=\(self.evCompensation, privacy: .public))")
+        } catch {
+            // JSONEncoder rejects non-finite Doubles, so log the only three we have.
+            log.error("""
+                save failed: \(error, privacy: .public) \
+                aperture=\(self.aperture, privacy: .public) \
+                focusDistance=\(self.focusDistance, privacy: .public) \
+                highlightBloom=\(self.highlightBloom, privacy: .public)
+                """)
         }
     }
 
